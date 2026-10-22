@@ -223,7 +223,11 @@
    "wp": "spor",
    "hobby": "Fotoğraf çekmek",
    "queue": 0,
-   "left": 0
+   "left": 0,
+   "look": [
+    1,
+    0
+   ]
   },
   {
    "handle": "@ananem.oruyor",
@@ -275,7 +279,11 @@
    "wp": "otel",
    "hobby": "Yemek yapmak",
    "queue": 0,
-   "left": 0
+   "left": 0,
+   "look": [
+    1,
+    1
+   ]
   },
   {
    "handle": "@gulcangurartul",
@@ -343,7 +351,11 @@
    "wp": "cicekci",
    "hobby": "Balık tutmak",
    "queue": 0,
-   "left": 0
+   "left": 0,
+   "look": [
+    2,
+    1
+   ]
   },
   {
    "handle": "@yemek.sokagii",
@@ -434,7 +446,11 @@
    "hobby": "Yemek yapmak",
    "queue": 0,
    "left": 0,
-   "partner": "@serhatoptas"
+   "partner": "@serhatoptas",
+   "look": [
+    1,
+    0
+   ]
   },
   {
    "handle": "@nurettinnusta",
@@ -489,7 +505,11 @@
    "wp": "gar",
    "hobby": "Kuşları izlemek",
    "queue": 0,
-   "left": 0
+   "left": 0,
+   "look": [
+    1,
+    1
+   ]
   }
  ]
 }
