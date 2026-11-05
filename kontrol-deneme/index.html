@@ -408,7 +408,8 @@ try {
 					await fa.sendEmailVerification(k.user);
 					yaz("Doğrulama bağlantısını e-postana gönderdik.");
 				} else if (!k.user.emailVerified) {
-					yaz("E-postan henüz doğrulanmadı, gelen kutuna bak.");
+					await fa.sendEmailVerification(k.user);  // doğrulanmamış girişte bağlantı yeniden gider (2026-11-05)
+					yaz("E-postan henüz doğrulanmadı, yeni doğrulama bağlantısını gönderdik.");
 				} else {
 					kapat();
 				}
