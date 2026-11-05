@@ -303,6 +303,9 @@ try {
 	};
 	if (window.miniakentKostumYol) {
 		kostumAc(window.miniakentKostumYol);
+		if (window.miniakentBeta) {  // betada da kostüm yalnız etkinlik süresince (kullanıcı, 2026-11-05)
+			setTimeout(kostumKapat, Math.max(0, KOSTUM_BIT - Date.now()));
+		}
 	} else if (Date.now() < KOSTUM_BIT) {
 		setTimeout(() => {
 			kostumAc("kostum");
@@ -680,17 +683,39 @@ body.gece #mkb .ikili .hayir, body.gece #mkb .sekmeler button { border-color: va
 				<button class="basvur" data-basvur="${il.id}" ${basvurdu || kilit ? "disabled" : ""}>${basvurdu ? "Başvurdun" : "Başvur"}</button></div></div>`;
 	}
 
-	const SAYFA = {
-		kisi: ["Karakterim", () => {
-			const is = isim(), ev = evim(), m = mesai(), [dy, iste] = durumYazi(), ilan = acikIlan(IS_ILAN).length;
-			return `<div class="kim"><span class="avatar">${esc(karakter.replace(/^@/, "").charAt(0).toUpperCase())}</span><div>
-				<b>${esc(karakter)}</b><span>${esc(is.meslek)}${is.yer ? " · " + esc(is.yer.split(" · ")[0]) : ""}</span><span>${esc(ev.adres)}</span></div></div>
+	// Kişi kartının üst kısmı (kullanıcı, 2026-11-05: başkasının kartı da kendi kartı gibi, yalnız seçmeli menüler yok).
+	// İsme dokununca kamera o kişiyi takip eder.
+	function kart(k, dy, iste) {
+		const m = mesai();
+		return `<button class="kim" data-takip="${esc(k.handle)}" style="border:0;background:none;padding:0;text-align:left">
+				<span class="avatar">${esc(k.handle.replace(/^@/, "").charAt(0).toUpperCase())}</span><div>
+				<b>${esc(k.handle)}</b><span>${esc(k.meslek)}${k.yer ? " · " + esc(k.yer.split(" · ")[0]) : ""}</span><span>${esc(k.ev)}</span></div></button>
 			<span class="durum ${iste ? "" : "evde"}">${esc(dy)}</span>
-			<div class="kutu para"><span class="ornek">Örnek</span><div><span class="etiket">Para</span><strong>${sayi(st.para)}</strong></div>
-				<div class="bugun"><span class="etiket">Bugün</span><span class="arti">+${sayi(is.ucret * 8)}</span> maaş<br><span class="eksi">−${sayi(ev.kira)}</span> kira</div></div>
+			<div class="kutu para"><span class="ornek">Örnek</span><div><span class="etiket">Para</span><strong>${sayi(k.para)}</strong></div>
+				<div class="bugun"><span class="etiket">Bugün</span><span class="arti">+${sayi(k.ucret * 8)}</span> maaş<br><span class="eksi">−${sayi(k.kira)}</span> kira</div></div>
 			<div class="kutu"><span class="ornek">Örnek</span><div class="gosterge">
 				<span>Mesai</span>${ada(m.oran)}<span class="kucuk">${m.yazi}</span>
-				<span>Yorgunluk</span>${ada(.62)}<span>Stres</span>${ada(.35)}<span>Sağlık</span>${ada(.9)}</div></div>
+				<span>Yorgunluk</span>${ada(k.g[0])}<span>Stres</span>${ada(k.g[1])}<span>Sağlık</span>${ada(k.g[2])}</div></div>`;
+	}
+	// başka sakinin örnek parası ve göstergeleri: kullanıcı adından (her açılışta aynı)
+	function ozet(h) {
+		let x = 7;
+		for (const c of h) x = (x * 31 + c.charCodeAt(0)) >>> 0;
+		return { para: 3000 + x % 17000, g: [((x >> 3) % 70 + 20) / 100, ((x >> 7) % 70 + 15) / 100, ((x >> 11) % 40 + 60) / 100] };
+	}
+	const kostumVar = () => window.miniakentKostumListe && typeof window.miniakentKostumSec === "function";
+	function kostumIzgara(h) {
+		const L = window.miniakentKostumListe, giyili = (window.miniakentKostumlar || {})[h] || "", g = L.gruplar[sekme];
+		return `<div class="etiket">Kostüm seç</div><div class="sekmeler">${L.gruplar.map((x, i) => `<button class="${i === sekme ? "secili" : ""}" data-sekme="${i}">${esc(x[0])}</button>`).join("")}</div>
+			<div class="kostumler">${g[1].map((id) => { const i = L.sira.indexOf(id);
+				return `<button class="${giyili === id ? "secili" : ""}" data-kostum="${id}" aria-label="${esc(L.adlar[id])}" style="background-position:${(i % 5) * 25}% ${Math.floor(i / 5) * (100 / 7)}%"></button>`; }).join("")}</div>
+			<button class="git" data-kostum=""><b>Kostümü çıkar</b><span>Kendi kıyafetine döner</span><em>—</em></button>`;
+	}
+
+	const SAYFA = {
+		kisi: ["Karakterim", () => {
+			const is = isim(), ev = evim(), [dy, iste] = durumYazi(), ilan = acikIlan(IS_ILAN).length;
+			return kart({ handle: karakter, meslek: is.meslek, yer: is.yer, ev: ev.adres, kira: ev.kira, ucret: is.ucret, para: st.para, g: [.62, .35, .9] }, dy, iste) + `
 			<div class="karolar">
 				<button class="karo" data-git="is"><span class="resim">${SVG.is}</span>İş${ilan ? `<span class="rozet">${ilan} ilan</span>` : ""}</button>
 				<button class="karo" data-git="ev"><span class="resim"><img src="yukleme_ev_${document.body.classList.contains("gece") ? "gece" : "gunduz"}.webp" alt=""></span>Ev</button>
@@ -723,22 +748,23 @@ body.gece #mkb .ikili .hayir, body.gece #mkb .sekmeler button { border-color: va
 					<span>${n[2] || "Mesaiden sonra, saatlik " + Math.round(is.ucret * 1.5)}</span><em class="${n[4] ? "iyi" : ""}">${n[3]}</em></button>`).join("")}</div>
 			<p class="bilgi">Mesai bitince karakterin eve döner.</p><p class="bilgi">Betada karakter henüz seçilen yere gitmez.</p>`;
 		}],
-		gorunus: ["Görünüş", () => {
-			const L = window.miniakentKostumListe;
-			if (!L || typeof window.miniakentKostumSec !== "function") return `<p class="bilgi">Kostümler şu an kapalı.</p>`;
-			const giyili = (window.miniakentKostumlar || {})[karakter] || "";
-			const g = L.gruplar[sekme];
-			return `<div class="etiket">Kostüm seç</div><div class="sekmeler">${L.gruplar.map((x, i) => `<button class="${i === sekme ? "secili" : ""}" data-sekme="${i}">${esc(x[0])}</button>`).join("")}</div>
-			<div class="kostumler">${g[1].map((id) => { const i = L.sira.indexOf(id);
-				return `<button class="${giyili === id ? "secili" : ""}" data-kostum="${id}" aria-label="${esc(L.adlar[id])}" style="background-position:${(i % 5) * 25}% ${Math.floor(i / 5) * (100 / 7)}%"></button>`; }).join("")}</div>
-			<button class="git" data-kostum=""><b>Kostümü çıkar</b><span>Kendi kıyafetine döner</span><em>—</em></button>`;
+		gorunus: ["Görünüş", () => kostumVar() ? kostumIzgara(karakter) : `<p class="bilgi">Kostümler şu an kapalı.</p>`],
+		// başka sakinin kartı: para ve göstergeler, Evini/İş yerini göster; kostüm yalnız etkinlik süresince (kullanıcı, 2026-11-05)
+		sakin: ["Sakin", () => {
+			const s = secilen, o = ozet(s.handle), m = mesai();
+			return kart({ handle: s.handle, meslek: s.meslek || "—", yer: s.isyeri, ev: s.ev || "—", kira: kiraOf(s.ev || ""), ucret: 220, para: o.para, g: o.g },
+				m.iste ? "İşte · 09:00–17:00" : "Evde", m.iste) + `
+			<div class="ikili"><button class="hayir" data-evgoster="1">Evini göster</button>${s.is_var ? `<button class="hayir" data-isgoster="1">İş yerini göster</button>` : ""}</div>
+			${karakter ? "" : `<div class="ikili"><button class="evet" data-kontrol="1">Kontrolü Al</button></div>`}
+			${kostumVar() ? (kostumAcik ? kostumIzgara(s.handle) : `<button class="git" data-kostumac="1"><b>Kostüm giydir</b><span>Cadılar Bayramı kostümleri</span><em>40 kostüm</em></button>`) : ""}`;
 		}],
 	};
+	let secilen = null, kostumAcik = false;
 
 	function ciz() {
 		const s = SAYFA[sayfaAd];
 		$("mkb-baslik").textContent = s[0];
-		$("mkb-geri").hidden = sayfaAd === "kisi";
+		$("mkb-geri").hidden = sayfaAd === "kisi" || sayfaAd === "sakin";
 		const ic = $("mkb-icerik"), y = ic.scrollTop;
 		ic.innerHTML = s[1]();
 		ic.scrollTop = y;
@@ -755,13 +781,16 @@ body.gece #mkb .ikili .hayir, body.gece #mkb .sekmeler button { border-color: va
 		$("mkb-kumanda").classList.toggle("acik", kumandaAcik);
 		if (window.miniakentArayuz) window.miniakentArayuz(kumandaAcik && durum !== 2, durum === 1 ? yarim + 44 : 0);
 	}
-	function ac() {
-		sayfaAd = "kisi"; durum = 1; ciz(); arayuz();
-		if (window.miniakentTakip) window.miniakentTakip(karakter);
+	function ac(ad) {
+		sayfaAd = ad; kostumAcik = false; durum = durum || 1; ciz(); arayuz();
+		$("mkb-icerik").scrollTop = 0;
 	}
-	function kapat() { durum = 0; arayuz(); }
+	function kapat() {   // × ya da aşağı çekince: takip de biter (eski kartın × gibi)
+		durum = 0; arayuz();
+		if (window.miniakentBirak) window.miniakentBirak();
+	}
 
-	$("mkb-panel").addEventListener("click", ac);
+	$("mkb-panel").addEventListener("click", () => ac("kisi"));
 	$("mkb-kapat").addEventListener("click", kapat);
 	$("mkb-geri").addEventListener("click", () => git("kisi"));
 	$("mkb-kumanda").addEventListener("click", () => { kumandaAcik = !kumandaAcik; arayuz(); });
@@ -786,11 +815,19 @@ body.gece #mkb .ikili .hayir, body.gece #mkb .sekmeler button { border-color: va
 		if (!b) return;
 		const d = b.dataset;
 		if (d.git) git(d.git);
+		else if (d.takip) window.miniakentTakip && window.miniakentTakip(d.takip);
+		else if (d.evgoster) window.miniakentEvGoster && window.miniakentEvGoster();
+		else if (d.isgoster) window.miniakentIsGoster && window.miniakentIsGoster();
+		else if (d.kontrol) window.miniakentKontrolAc && window.miniakentKontrolAc(secilen.handle);
+		else if (d.kostumac) { kostumAcik = true; ciz(); }
 		else if (b.id === "mkb-ayril") { kapat(); window.miniakentAyril && window.miniakentAyril(); }
 		else if (b.id === "mkb-sifirla") { st = yeni(); kaydet(); ciz(); }
 		else if (d.ne) { st.ne = st.ne === d.ne ? "" : d.ne; kaydet(); ciz(); }
 		else if (d.sekme) { sekme = +d.sekme; ciz(); }
-		else if (d.kostum !== undefined && window.miniakentKostumSec) { window.miniakentKostumSec(karakter, d.kostum); setTimeout(ciz, 600); }
+		else if (d.kostum !== undefined && window.miniakentKostumSec) {
+			window.miniakentKostumSec(sayfaAd === "sakin" ? secilen.handle : karakter, d.kostum);
+			setTimeout(ciz, 600);
+		}
 		else if (d.al || d.basvur) onay(d.al ? "al" : "basvur", d.al || d.basvur);
 	});
 	function onay(tur, id) {
@@ -839,11 +876,18 @@ body.gece #mkb .ikili .hayir, body.gece #mkb .sekmeler button { border-color: va
 	bolge.addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) { bolge.hidden = true; window.miniakentBolgeGit && window.miniakentBolgeGit(b.dataset.z); } });
 
 	// oyunun durumu: yarım saniyede bir (oyun açılınca ana ekran görünür)
-	let sonBilgi = "", sonOturum = null, sonDk = -1;
+	let sonBilgi = "", sonOturum = null, sonDk = -1, sonSecim = 0;
 	setInterval(() => {
 		const hud = window.miniakentHud;
 		if (!hud) return;
 		kok.hidden = false;
+		// oyunda biri seçildi (dokunma ya da arama): kendi karakteriyse Karakterim, değilse sakin kartı
+		if (window.miniakentSecimSurum && window.miniakentSecimSurum !== sonSecim) {
+			sonSecim = window.miniakentSecimSurum;
+			secilen = window.miniakentSecilen;
+			bolge.hidden = true;
+			ac(secilen.handle === karakter ? "kisi" : "sakin");
+		}
 		$("mkb-nufus").textContent = "Nüfus: " + sayi(hud.nufus) + " · Bekleyen: " + sayi(hud.bekleyen);
 		$("mkb-saat").textContent = hud.saat;
 		$("mkb-ses").innerHTML = hud.sessiz ? SVG.sessiz : SVG.ses;
@@ -873,7 +917,7 @@ body.gece #mkb .ikili .hayir, body.gece #mkb .sekmeler button { border-color: va
 		</script>
 		<script src="index.js"></script>
 		<script>
-const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"mainPack":"beta/index-beta-v202611052118.pck","fileSizes":{"beta/index-beta-v202611052118.pck":6161860,"index.wasm":39514754},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4};
+const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"mainPack":"beta/index-beta-v202611052250.pck","fileSizes":{"beta/index-beta-v202611052250.pck":6162420,"index.wasm":39514754},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4};
 const GODOT_THREADS_ENABLED = false;
 const engine = new Engine(GODOT_CONFIG);
 
