@@ -492,7 +492,7 @@ body.gece #mkb { --krem: #22304f; --krem2: #2c3b5e; --yazi: #fbe9cb; --kenar: #0
 #mkb .mkb-liste button.soluk { color: var(--soluk); }
 #mkb #mkb-oneri { left: 12px; right: 12px; }
 #mkb #mkb-bolge { right: 12px; min-width: 200px; }
-#mkb .kumanda-dugme { position: absolute; left: 14px; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transition: bottom .3s; }
+#mkb .kumanda-dugme { position: absolute; left: 14px; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); }
 #mkb .kumanda-dugme.acik { background: var(--yazi); color: var(--krem2); }
 #mkb .panel-dugme { position: absolute; right: 14px; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); display: flex; align-items: center; gap: 8px;
 	padding: 6px 14px 6px 6px; border-radius: 999px; background: var(--krem); border: 2.5px solid var(--kenar); box-shadow: 0 3px 0 var(--golge); font: 600 15px var(--fb); }
@@ -770,16 +770,15 @@ body.gece #mkb .ikili .hayir, body.gece #mkb .sekmeler button { border-color: va
 		ic.scrollTop = y;
 	}
 	function git(ad) { sayfaAd = ad; ciz(); $("mkb-icerik").scrollTop = 0; }
-	// panel: 0 kapalı, 1 yarım, 2 tam; yarımken kumanda panelin üstünde kalır (kullanıcı, 2026-11-05)
+	// panel: 0 kapalı, 1 yarım, 2 tam; panel açıkken Kumanda düğmesi de kumanda da gizli (kullanıcı, 2026-11-06)
 	function arayuz() {
-		const sayfa = $("mkb-sayfa"), yarim = window.innerHeight * 0.64;
+		const sayfa = $("mkb-sayfa");
 		sayfa.classList.toggle("yarim", durum === 1);
 		sayfa.classList.toggle("tam", durum === 2);
 		$("mkb-panel").hidden = !karakter || durum > 0;
-		$("mkb-kumanda").hidden = !tel || durum === 2;
-		$("mkb-kumanda").style.bottom = durum === 1 ? (yarim + 12) + "px" : "";
+		$("mkb-kumanda").hidden = !tel || durum > 0;
 		$("mkb-kumanda").classList.toggle("acik", kumandaAcik);
-		if (window.miniakentArayuz) window.miniakentArayuz(kumandaAcik && durum !== 2, durum === 1 ? yarim + 44 : 0);
+		if (window.miniakentArayuz) window.miniakentArayuz(kumandaAcik && durum === 0, 0);
 	}
 	function ac(ad) {
 		sayfaAd = ad; kostumAcik = false; durum = durum || 1; ciz(); arayuz();
@@ -805,7 +804,8 @@ body.gece #mkb .ikili .hayir, body.gece #mkb .sekmeler button { border-color: va
 		const dy = e.clientY - y0;
 		y0 = null;
 		if (dy < -30) durum = 2;
-		else if (dy > 30) durum = durum === 2 ? 1 : 0;
+		else if (dy > 30 && durum === 1) return kapat();   // aşağı çekip kapatınca takip de biter (× gibi)
+		else if (dy > 30) durum = 1;
 		else durum = durum === 1 ? 2 : 1;
 		arayuz();
 	});
