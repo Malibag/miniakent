@@ -1,0 +1,35 @@
+# Uygulamanın Haberler listesi (kullanıcı, 2026-11-14): 30 dakikada bir Instagram'daki son videoları Firebase
+# haberler/'e yazar (haberler_topla.py). YAYINDA Web_Deneme\.github\workflows\haberler.yml olarak, betik de
+# Web_Deneme\.github\haberler_topla.py olarak kopyalanır. Gizli değişkenler (Malibag/miniakent > Settings > Secrets):
+#   IG_TOKEN     Instagram anahtarı; bilgisayar her gece yeniler ve buraya da koyar (yorum_topla.py)
+#   FIREBASE_SA  Firebase hizmet hesabı JSON'u (haberler/ yazmak ve yeni videoda "duyurular" konusuna bildirim için)
+name: Haberler
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: haberler
+  cancel-in-progress: false
+
+jobs:
+  topla:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install google-auth==2.35.0 requests==2.32.3
+      - run: python .github/haberler_topla.py
+        env:
+          IG_TOKEN: ${{ secrets.IG_TOKEN }}
+          FIREBASE_SA: ${{ secrets.FIREBASE_SA }}
