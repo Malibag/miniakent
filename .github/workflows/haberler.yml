@@ -1,4 +1,5 @@
-# Uygulamanın Haberler listesi (kullanıcı, 2026-11-14): 30 dakikada bir Instagram'daki son videoları Firebase
+# Uygulamanın Haberler listesi (kullanıcı, 2026-11-14): 09:07–16:57 arası 10 dakikada bir (Türkiye saati; GitHub
+# saat başı ve buçukları geciktirdiği için tek dakikalar, kullanıcı 2026-11-15; bu saatler dışında elle çalıştırılır) Instagram'daki son videoları Firebase
 # haberler/'e yazar (haberler_topla.py). YAYINDA Web_Deneme\.github\workflows\haberler.yml olarak, betik de
 # Web_Deneme\.github\haberler_topla.py olarak kopyalanır. Gizli değişkenler (Malibag/miniakent > Settings > Secrets):
 #   IG_TOKEN     Instagram anahtarı; bilgisayar her gece yeniler ve buraya da koyar (yorum_topla.py)
@@ -7,7 +8,7 @@ name: Haberler
 
 on:
   schedule:
-    - cron: "*/30 * * * *"
+    - cron: "7-57/10 6-13 * * *"   # UTC = Türkiye saati - 3
   workflow_dispatch:
 
 permissions:
